@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>studyLane</title>
+    <link rel="stylesheet" href="stylesheet/register.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="image">
+        <img src="/images/registration.svg" alt="Login-illustartion" />
+      </div>
+      <form action="/create" method="post" class="register">
+        <div class="text">
+          <h1>Join Us</h1>
+          <p>Create your account to <br />Start new journey</p>
+        </div>
+        <div class="error" style="display: none">
+          <p style="color: white">this is an error</p>
+        </div>
+        <div class="inputWrapper inputEmail">
+          <input
+            type="email"
+            class="email"
+            name="email"
+            placeholder=" "
+            required
+          />
+          <label>Email</label>
+          <i class="fa-solid fa-envelope"></i>
+        </div>
+
+        <div class="inputWrapper inputPassword">
+          <input
+            type="password"
+            class="password"
+            name="password"
+            placeholder=" "
+            required
+          />
+          <label>Password</label>
+          <i class="fa-solid fa-eye-slash"></i>
+        </div>
+        <div class="inputWrapper inputPassword">
+          <input
+            type="password"
+            class="Confirmpassword"
+            name="confirmpassword"
+            placeholder=" "
+            required
+          />
+          <label>Confirm Password</label>
+          <i class="fa-solid fa-eye-slash"></i>
+        </div>
+        <div class="forBtn">
+          <div class="button">
+            <button>Signup</button>
+          </div>
+        </div>
+        <span class="line"></span>
+        <p>or</p>
+        <div class="google">
+          <button type="button" class="login-with-google-btn">
+            Sign in with Google
+          </button>
+        </div>
+        <div class="Register">
+          <p>Don"t have an account yet ?<a href="/">Login</a></p>
+        </div>
+      </form>
+    </div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+      integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://kit.fontawesome.com/c2025843a8.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="/scripts/register.js"></script>
+  </body>
+</html>
