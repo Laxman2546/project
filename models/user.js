@@ -9,9 +9,12 @@ mongoose
   .catch((err) => console.error("Database connection error:", err));
 
 const userSchema = new mongoose.Schema({
-  email: { type: String },
+  username: { type: String },
+  email: {
+    type: String,
+    unique: true,
+  },
   password: { type: String },
-  confirmpassword: { type: String },
 });
 
 module.exports = mongoose.model("User", userSchema);

@@ -3,8 +3,10 @@ const path = require("path");
 const mongoose = require("mongoose");
 const userModel = require("./models/user");
 const bcrypt = require("bcrypt");
+const ejs = require("ejs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser"); // Use correct naming and import
+const { log } = require("console");
 
 const app = express();
 
@@ -24,17 +26,8 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-// Route to delete a user by email
-app.get("/delete", async (req, res) => {
-  const result = await userModel.deleteOne({ email: "unix@gmail.com" });
-  if (result.deletedCount === 0) {
-    return res.status(404).send("User not found");
-  }
-  res.send("User deleted successfully");
-});
-
 app.get("/courses", isloggedin, (req, res) => {
-  res.render("courses");
+  res.render("courses", { user: req.user });
 });
 
 app.get("/logout", (req, res) => {
@@ -45,22 +38,29 @@ app.get("/logout", (req, res) => {
   });
   res.redirect("/");
 });
+app.get("/profile", isloggedin, (req, res) => {
+  res.render("profile", { user: req.user });
+});
 
 function isloggedin(req, res, next) {
   const token = req.cookies.token;
   if (!token) {
     res.redirect("/");
+  } else {
+    try {
+      const data = jwt.verify(token, "shhhh");
+      req.user = data;
+      next();
+    } catch (err) {
+      console.log("JWT verification failed:", err);
+      res.redirect("/");
+    }
   }
-  next();
 }
 
 // Register a new user
 app.post("/create", async (req, res) => {
-  const { email, password, confirmpassword } = req.body;
-
-  if (password !== confirmpassword) {
-    return res.status(400).send("Passwords do not match");
-  }
+  const { username, email, password } = req.body;
 
   bcrypt.genSalt(10, function (err, salt) {
     if (err) {
@@ -72,11 +72,12 @@ app.post("/create", async (req, res) => {
       }
       try {
         const user = await userModel.create({
+          username,
           email,
           password: hash,
         });
 
-        const token = jwt.sign({ email }, "shhhh");
+        const token = jwt.sign({ email, username }, "shhhh");
         res.cookie("token", token, { httpOnly: true, path: "/" });
         res.redirect("/courses");
       } catch (err) {
@@ -103,7 +104,8 @@ app.post("/login", async (req, res) => {
         return res.status(400).send("Email or password incorrect");
       }
 
-      const token = jwt.sign({ email }, "shhhh");
+      const token = jwt.sign({ email, username: user.username }, "shhhh"); // Add username to the payload
+
       res.cookie("token", token, { httpOnly: true, path: "/" });
       res.redirect("/courses");
     });
