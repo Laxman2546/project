@@ -125,14 +125,18 @@ a {
   justify-content: center;
 }
 
-.icon .fa-circle-user {
-  width: 100%;
-  height: 100%;
-  font-size: 30px;
+.icon img {
+  width: 45px;
+  height: 45px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  border: 1px solid purple;
+  padding: 4px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 50%;
 }
 .icon a:hover::before {
   width: 0%;

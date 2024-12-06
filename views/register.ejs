@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>studyLane</title>
-    <link rel="stylesheet" href="stylesheet/register.css" />
+    <link rel="stylesheet" href="/stylesheet/register.css" />
     <link
       href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css"
       rel="stylesheet"
@@ -20,6 +20,15 @@
           <h1>Join Us</h1>
           <p>Create your account to <br />Start new journey</p>
         </div>
+        <% if (messages.success) { %>
+        <div class="notification" style="background-color: green">
+          <p style="color: white"><%= messages.success %></p>
+        </div>
+        <% }else if (messages.error) { %>
+        <div class="notification" style="background-color: red">
+          <p style="color: white"><%= messages.error %></p>
+        </div>
+        <% } %>
         <div class="error" style="display: none">
           <p style="color: white">this is an error</p>
         </div>

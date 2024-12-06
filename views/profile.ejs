@@ -32,9 +32,12 @@
             <li><a href="#skilltest" class="nav-link">SkillTest</a></li>
             <li><a href="#contact" class="nav-link">Contact</a></li>
             <div class="icon">
-              <abbr title="profile" style="text-decoration: none"
-                ><i class="fa-solid fa-circle-user"></i
-              ></abbr>
+              <abbr title="profile" style="text-decoration: none"></abbr>
+                <img
+                  src="<%= user.profileImage ? user.profileImage.data : '/images/default.png' %>"
+                />
+                </abbr
+              >
             </div>
           </ul>
 
@@ -62,9 +65,19 @@
         </div>
       </div>
     </div>
+    <% if (messages.success) { %>
     <div class="notification">
-      <p>Changes Saved !</p>
+      <p style="color: white"><%= messages.success %></p>
     </div>
+    <% }else if (messages.error) { %>
+    <div class="notification">
+      <p><%= messages.error %></p>
+    </div>
+    <% } %>
+    <div class="upload">
+      <p>click save to upload the image</p>
+    </div>
+
     <div class="wrapper">
       <div class="dashboard">
         <div class="dashboardTop">

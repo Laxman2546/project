@@ -5,6 +5,8 @@ const icons = document.querySelectorAll(".fa-eye-slash");
 const button = document.querySelector(".button");
 const Email = document.querySelector(".email");
 const error = document.querySelector(".error");
+const notification = document.querySelector(".notification");
+
 
 let errors = [
   { email: "please enter your email" },
@@ -109,3 +111,19 @@ gsap.from(".register", {
   opacity: 0.5,
   delay: 0,
 });
+const t2 = gsap.timeline();
+t2.from(".notification", {
+  opacity: 0,
+  duration: 1,
+})
+  .to(".notification", {
+    opacity: 1,
+    delay: 0,
+    duration: 1,
+  })
+  .to(".notification", {
+    opacity: 0,
+    duration: 1,
+    delay: 1,
+    display: "none",
+  });

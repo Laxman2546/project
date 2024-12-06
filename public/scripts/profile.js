@@ -10,6 +10,8 @@ const pencil = document.querySelector("#pencil");
 const popup = document.querySelector(".popup");
 const cancel = document.querySelector("#cancel");
 const overlay = document.querySelector(".overlay");
+const upload = document.querySelector(".upload");
+
 const initialData = {};
 
 function toggleMenu() {
@@ -69,23 +71,36 @@ usernames.addEventListener("input", () => {
   save.style.display = isModified ? "block" : "none";
 });
 
-const tl = gsap.timeline({ paused: true });
+const tl = gsap.timeline();
 tl.from(".notification", {
-  y: 50,
   opacity: 0,
   duration: 1,
 })
   .to(".notification", {
-    y: 0,
     opacity: 1,
-    delay: 1,
+    delay: 0,
     duration: 1,
   })
   .to(".notification", {
     opacity: 0,
-    y: 80,
     duration: 1,
-    delay: 0.1,
+    delay: 1,
+    display: "none",
+  });
+const t2 = gsap.timeline();
+t2.from(".upload", {
+  opacity: 0,
+  duration: 1,
+})
+  .to(".upload", {
+    opacity: 1,
+    delay: 0,
+    duration: 1,
+  })
+  .to(".upload", {
+    opacity: 0,
+    duration: 1,
+    delay: 1,
     display: "none",
   });
 
@@ -103,14 +118,32 @@ pencil.addEventListener("click", () => {
 function popupOpen() {
   overlay.style.display = "flex";
   popup.style.display = "flex";
+  upload.style.display = "none";
 }
 function popupClose() {
   popup.style.display = "none";
   overlay.style.display = "none";
+  upload.style.display = "flex";
 }
 
 cancel.addEventListener("click", () => {
   popupClose();
+  const t2 = gsap.timeline();
+  t2.from(".upload", {
+    opacity: 0,
+    duration: 1,
+  })
+    .to(".upload", {
+      opacity: 1,
+      delay: 0,
+      duration: 1,
+    })
+    .to(".upload", {
+      opacity: 0,
+      duration: 1,
+      delay: 1,
+      display: "none",
+    });
 });
 const fileInput = document.getElementById("fileInput");
 

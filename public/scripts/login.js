@@ -1,24 +1,7 @@
 var password = document.querySelector(".password");
 let button = document.querySelector(".button");
-const icon = document.querySelector(".fa-eye-slash");
 const error = document.querySelector(".error");
 const email = document.querySelector(".email");
-
-icon.addEventListener("click", () => {
-  let passAttri = password.getAttribute("type");
-  if (passAttri === "password") {
-    password.setAttribute("type", "text");
-    icon.classList.remove("fa-eye-slash");
-    icon.classList.add("fa-eye");
-    password.textContent = "Hide";
-  } else {
-    password.setAttribute("type", "password");
-    icon.classList.add("fa-eye-slash");
-    icon.classList.remove("fa-eye");
-    password.textContent = "Show";
-  }
-});
-
 let arr = [
   {
     email: "Please enter your Email id",
@@ -69,4 +52,24 @@ gsap.from(".Login", {
   duration: 0.5,
   opacity: 0.5,
   delay: 0,
+});
+const messages = [];
+if (messages.length > 0) {
+  event.preventDefault();
+  error.style.display = "block";
+  error.innerHTML = `<p style="color: white">${messages.join("<br>")}</p>`;
+}
+// Password visibility toggle
+const icon = document.querySelector(".fa-eye-slash");
+icon.addEventListener("click", () => {
+  const passAttri = password.getAttribute("type");
+  if (passAttri === "password") {
+    password.setAttribute("type", "text");
+    icon.classList.remove("fa-eye-slash");
+    icon.classList.add("fa-eye");
+  } else {
+    password.setAttribute("type", "password");
+    icon.classList.add("fa-eye-slash");
+    icon.classList.remove("fa-eye");
+  }
 });

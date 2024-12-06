@@ -349,7 +349,6 @@ const displayItem = (items) => {
     .join("");
 };
 
-// Display items for MERN Stack courses
 const displayItem2 = (items) => {
   courseAll2.innerHTML = items
     .map(({ title, description, image, learners }) => {
@@ -370,3 +369,6 @@ const displayItem2 = (items) => {
     })
     .join("");
 };
+
+
+

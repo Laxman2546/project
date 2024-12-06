@@ -9,13 +9,23 @@
   <body>
     <div class="container">
       <div class="image">
-        <img src="/images/login.svg" alt="Login-illustartion" />
+        <img src="/images/login.svg" alt="Login illustration" />
       </div>
-      <form action="/login" method="post" class="Login">
+      <form action="/login" method="post" class="Login" id="loginForm">
         <div class="text">
-          <h1>WelcomeBack</h1>
+          <h1>Welcome Back</h1>
           <p>Login to your account to <br />continue your journey</p>
         </div>
+
+        <% if (messages.error) { %>
+        <div class="server-error flash-message">
+          <p style="color: white"><%= messages.error %></p>
+        </div>
+        <% } %> <% if (messages.success) { %>
+        <div class="server-success flash-message">
+          <p style="color: white"><%= messages.success %></p>
+        </div>
+        <% } %>
         <div class="error" style="display: none">
           <p style="color: white">this is an error</p>
         </div>
@@ -30,7 +40,6 @@
           <label>Email</label>
           <i class="fa-solid fa-envelope"></i>
         </div>
-
         <div class="inputWrapper inputPassword">
           <input
             type="password"
@@ -44,7 +53,7 @@
         </div>
         <div class="forBtn">
           <div class="forgot">
-            <a href="#">forgotPassword</a>
+            <a href="#">Forgot Password?</a>
           </div>
           <div class="button">
             <button>Signin</button>
@@ -58,10 +67,12 @@
           </button>
         </div>
         <div class="Register">
-          <p>Don"t have an account yet ?<a href="/register">Signup</a></p>
+          <p>Don't have an account yet? <a href="/register">Sign Up</a></p>
         </div>
       </form>
     </div>
+
+    <!-- External Scripts -->
     <script
       src="https://kit.fontawesome.com/c2025843a8.js"
       crossorigin="anonymous"
@@ -72,6 +83,6 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
-    <script src="scripts/login.js"></script>
+    <script src="/scripts/login.js"></script>
   </body>
 </html>

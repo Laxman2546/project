@@ -1,20 +1,18 @@
 const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
-const userModel = require("./models/user");
-const profileModel = require("./models/profile");
 const bcrypt = require("bcrypt");
 const ejs = require("ejs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
-const { log } = require("console");
-const env = require("dotenv").config();
+const flash = require("connect-flash");
+const session = require("express-session");
+require("dotenv").config(); // Load environment variables
 
-if (env.error) {
-  console.log("failed at env");
-}
+const userModel = require("./models/user");
 
+// Initialize Express
 const app = express();
 
 // Middleware setup
@@ -22,11 +20,22 @@ app.set("view engine", "ejs");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
-app.use(cookieParser()); // Ensure cookie-parser is used correctly
+app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.SECRET_KEY,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+app.use(flash());
+app.use((req, res, next) => {
+  res.locals.messages = req.flash();
+  next();
+});
 
 // Multer setup for file uploads
 const storage = multer.memoryStorage();
-
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
@@ -41,6 +50,24 @@ const upload = multer({
   },
 });
 
+// Authentication middleware
+function isloggedin(req, res, next) {
+  const token = req.cookies.token;
+  if (!token) {
+    req.flash("error", "You must be logged in to access this page.");
+    return res.redirect("/");
+  }
+  try {
+    const data = jwt.verify(token, process.env.SECRET_KEY);
+    req.user = data;
+    next();
+  } catch (err) {
+    console.log("JWT verification failed:", err);
+    req.flash("error", "Invalid or expired session. Please log in again.");
+    res.redirect("/");
+  }
+}
+
 // Routes
 app.get("/", (req, res) => {
   res.render("login");
@@ -50,106 +77,60 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-app.get("/courses", isloggedin, (req, res) => {
-  res.render("courses", { user: req.user });
+// Course route (GET)
+app.get("/courses", isloggedin, async (req, res) => {
+  try {
+    const { email } = req.user;
+
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      req.flash("error", "User not found.");
+      return res.redirect("/");
+    }
+
+    if (user.profileImage && user.profileImage.data) {
+      user.profileImage.data = `data:${
+        user.profileImage.contentType
+      };base64,${user.profileImage.data.toString("base64")}`;
+    } else {
+      user.profileImage = { data: "/images/default.png" };
+    }
+
+    res.render("courses", { user });
+  } catch (err) {
+    console.error("Error fetching user data:", err);
+    req.flash("error", "An error occurred while loading courses.");
+    res.redirect("/");
+  }
 });
 
-app.get("/logout", (req, res) => {
-  res.cookie("token", "", {
-    expires: new Date(0),
-    httpOnly: true,
-    path: "/",
-  });
-  res.redirect("/");
-});
-
-// Profile routes
 app.get("/profile", isloggedin, async (req, res) => {
   try {
-    const profile = await userModel.findOne({ email: req.user.email });
+    const { email } = req.user;
 
-    if (profile && profile.profileImage && profile.profileImage.data) {
-      // If the user has a profile image, convert it to a base64 string
-      profile.profileImage.data = `data:${
-        profile.profileImage.contentType
-      };base64,${profile.profileImage.data.toString("base64")}`;
-    } else {
-      // Fallback to a default image path if no profile image is found
-      profile.profileImage = {
-        data: "/images/default.png", // Static image path
-      };
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      req.flash("error", "User not found.");
+      return res.redirect("/");
     }
 
-    res.render("profile", { user: profile });
+    if (user.profileImage && user.profileImage.data) {
+      user.profileImage.data = `data:${
+        user.profileImage.contentType
+      };base64,${user.profileImage.data.toString("base64")}`;
+    } else {
+      user.profileImage = { data: "/images/default.png" };
+    }
+
+    res.render("profile", { user });
   } catch (err) {
     console.error("Error retrieving profile:", err);
-    res.status(500).send("Error retrieving profile.");
-  }
-});
-
-// Authentication middleware
-function isloggedin(req, res, next) {
-  const token = req.cookies.token;
-  if (!token) {
-    res.redirect("/"); // Redirect if no token found
-  } else {
-    try {
-      const data = jwt.verify(token, process.env.SECRET_KEY);
-      req.user = data;
-      next();
-    } catch (err) {
-      console.log("JWT verification failed:", err);
-      res.redirect("/"); // Redirect if token verification fails
-    }
-  }
-}
-app.get("/update", isloggedin, async (req, res) => {
-  try {
-    const updatedUser = await userModel.findOneAndUpdate(
-      { email: "harika@gmail.com" },
-      { $set: { username: "nani" } },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).send("User not found.");
-    }
-
-    res.send(updatedUser); // Send the updated user details as response
-  } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).send("An error occurred while updating the user.");
+    req.flash("error", "An error occurred while loading the profile.");
+    res.redirect("/");
   }
 });
 
 // Profile update route
-app.get("/profile", isloggedin, async (req, res) => {
-  const { username, address } = req.body;
-  const { email } = req.user;
-  try {
-    const profile = await userModel.findOne({ email: email });
-
-    // Check if profile is found
-    if (!profile) {
-      return res.status(404).send("Profile not found");
-    }
-
-    // Convert profileImage to base64 if it exists
-    if (profile.profileImage && profile.profileImage.data) {
-      profile.profileImage.data = `data:${
-        profile.profileImage.contentType
-      };base64,${profile.profileImage.data.toString("base64")}`;
-    } else {
-      profile.profileImage = { data: "/images/default.png" }; // Fallback to default image
-    }
-    // Render profile page with user data
-    res.render("profile", { user: profile });
-  } catch (err) {
-    console.error("Error retrieving profile:", err);
-    res.status(500).send("Error retrieving profile.");
-  }
-});
-
 app.post(
   "/profile/update",
   isloggedin,
@@ -157,10 +138,11 @@ app.post(
   async (req, res) => {
     try {
       const { username, address, occupation } = req.body;
-      const { email } = req.user;
+      const { email } = req.user; // User's email from the auth middleware
+
       const updateData = { username, address, occupation };
 
-      // If an image is uploaded, add it to the update data
+      // Add profile image if uploaded
       if (req.file) {
         updateData.profileImage = {
           data: req.file.buffer,
@@ -168,20 +150,39 @@ app.post(
         };
       }
 
-      // Update user in the database
+      // Check if the username is already taken by another user
+      const existingUsername = await userModel.findOne({
+        username,
+        email: { $ne: email }, 
+      });
+
+      if (existingUsername) {
+        req.flash("error", "Username already exists try another!");
+        return res.redirect("/profile");
+      }
+
+    
       const updatedUser = await userModel.findOneAndUpdate(
-        { email },
+        { email }, 
         updateData,
         { new: true }
       );
 
       if (!updatedUser) {
-        return res.status(404).send("User not found.");
+        req.flash("error", "User not found. Unable to update profile.");
+        return res.redirect("/profile");
       }
 
+      // Successful update
+      req.flash("success", "Profile updated successfully!");
       res.redirect("/profile");
     } catch (err) {
-      res.status(500).send("An error occurred while updating the profile.");
+      console.error("Error updating profile:", err);
+      req.flash(
+        "error",
+        "An unexpected error occurred while updating the profile."
+      );
+      res.redirect("/profile");
     }
   }
 );
@@ -190,36 +191,33 @@ app.post(
 app.post("/create", async (req, res) => {
   const { username, email, password } = req.body;
 
-  bcrypt.genSalt(10, function (err, salt) {
-    if (err) {
-      return res.status(500).send("Error generating salt");
+  try {
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      req.flash("error", "User already exists. Try logging in.");
+      return res.redirect("/register");
     }
-    bcrypt.hash(password, salt, async (err, hash) => {
-      if (err) {
-        return res.status(500).send("Error hashing password");
-      }
-      const userEmail = await userModel.findOne({ email });
-      if (!userEmail) {
-        try {
-          const user = await userModel.create({
-            username,
-            email,
-            password: hash,
-          });
 
-          const token = jwt.sign({ email, username }, process.env.SECRET_KEY);
-          console.log("Token:", token);
-          console.log("Secret used for verification:", process.env.SECRET_KEY);
-          res.cookie("token", token, { httpOnly: true, path: "/" });
-          res.redirect("/courses");
-        } catch (err) {
-          res.status(500).send("Error saving user: " + err.message);
-        }
-      } else {
-        res.send("user already exists");
-      }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await userModel.create({
+      username,
+      email,
+      password: hashedPassword,
     });
-  });
+
+    const token = jwt.sign({ email: newUser.email }, process.env.SECRET_KEY, {
+      expiresIn: "1h",
+    });
+
+    res.cookie("token", token, { httpOnly: true, secure: false });
+    req.flash("success", "Registration successful!");
+    res.redirect("/courses");
+  } catch (err) {
+    console.error("Error during registration:", err);
+    req.flash("error", "An error occurred during registration.");
+    res.redirect("/register");
+  }
 });
 
 // Login route
@@ -229,38 +227,39 @@ app.post("/login", async (req, res) => {
   try {
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.status(400).send("Email or password incorrect");
+      req.flash("error", "Invalid email or password.");
+      return res.redirect("/");
     }
 
-    bcrypt.compare(password, user.password, (err, result) => {
-      if (err) {
-        return res.status(500).send("Internal Server Error");
-      }
-      if (!result) {
-        return res.status(400).send("Email or password incorrect");
-      }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      req.flash("error", "Invalid email or password.");
+      return res.redirect("/");
+    }
 
-      const token = jwt.sign(
-        { email, username: user.username },
-        process.env.SECRET_KEY
-      ); // Add username to the payload
-
-      res.cookie("token", token, { httpOnly: true, path: "/" });
-      res.redirect("/courses");
+    const token = jwt.sign({ email: user.email }, process.env.SECRET_KEY, {
+      expiresIn: "1h",
     });
+
+    res.cookie("token", token, { httpOnly: true, secure: false });
+    req.flash("success", "Login successful!");
+    res.redirect("/courses");
   } catch (err) {
-    res.status(500).send("Internal Server Error");
+    console.error("Error during login:", err);
+    req.flash("error", "An error occurred during login.");
+    res.redirect("/");
   }
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error("Error:", err.message); // Log the error for debugging
-  res.status(500).send("Something went wrong!"); // General message for users
+// Logout route
+app.get("/logout", (req, res) => {
+  res.cookie("token", "", { expires: new Date(0), httpOnly: true });
+  req.flash("success", "Logged out successfully.");
+  res.redirect("/");
 });
 
 // Start the server
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

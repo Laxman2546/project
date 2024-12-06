@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 mongoose
-  .connect("mongodb://localhost:27017/nani", {
+  .connect("mongodb://localhost:27017/tempData", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
